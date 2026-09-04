@@ -23,13 +23,15 @@ export const registerUser = asyncHandler(async (req, res) => {
   user.emailVerificationTokenExpiry = tokenExpiry;
 
   await user.save({ validateBeforeSave: false });
-  await sendMail({
+  sendMail({
     email: user.email,
     subject: "Email Verification",
     mailgenContent: emailVerificationTemplate(
       user.userName,
       `${req.protocol}://${req.get("host")}/api/v1/user/verify-email/${unhashedToken}`,
     ),
+  }).catch((error) => {
+    console.error("Email verification message was not sent:", error);
   });
   const createdUser = await User.findById(user._id).select(
     "-password -emailVerificationToken -emailVerificationTokenExpiry -forgotPasswordToken -forgotPasswordTokenExpiry",

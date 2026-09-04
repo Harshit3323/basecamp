@@ -1,7 +1,15 @@
-import mailgen from "mailgen";
 import nodemailer from "nodemailer";
 import "dotenv/config";
 import Mailgen from "mailgen";
+
+const transporter = nodemailer.createTransport({
+  host: process.env.MAILTRAP_SMTP_HOST,
+  port: Number(process.env.MAILTRAP_SMTP_PORT),
+  auth: {
+    user: process.env.MAILTRAP_SMTP_USERNAME,
+    pass: process.env.MAILTRAP_SMTP_PASSWORD,
+  },
+});
 
 export const sendMail = async (options) => {
   const mailGenerator = new Mailgen({
@@ -15,26 +23,18 @@ export const sendMail = async (options) => {
   const emailText = mailGenerator.generatePlaintext(options.mailgenContent);
   const emailHtml = mailGenerator.generate(options.mailgenContent);
 
-  const transporter = nodemailer.createTransport({
-    host: process.env.MAILTRAP_SMTP_HOST,
-    port: process.env.MAILTRAP_SMTP_PORT,
-    auth: {
-      user: process.env.MAILTRAP_SMTP_USERNAME,
-      pass: process.env.MAILTRAP_SMTP_PASSWORD,
-    },
-  });
-
   const mail = {
     from: "Basecamp <noreply@basecamp.com>",
-    to: "options.email",
+    to: options.email,
     subject: options.subject,
     text: emailText,
     html: emailHtml,
   };
   try {
-    await transporter.sendMail(mail);
+    return await transporter.sendMail(mail);
   } catch (err) {
     console.error("Error sending email:", err);
+    throw err;
   }
 };
 export const emailVerificationTemplate = (userName, verificationLink) => {
