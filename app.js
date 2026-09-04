@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import { connectDb } from "./db/index.js";
 import healthRouter from "./routes/healthCheck.router.js";
+import userRouter from "./routes/user.router.js";
 const app = express();
 
 app.use(express.json({ limit: "16kb" }));
@@ -19,7 +20,10 @@ app.use(
   }),
 );
 app.use("/api/v1/healthcheck/", healthRouter);
+
+app.use("/api/v1/auth/", userRouter);
 app.get("/", async (req, res) => {
   res.send("hello from db");
 });
+
 export default app;
