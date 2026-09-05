@@ -3,6 +3,7 @@ import apiResponse from "../utils/apiResponse.js";
 import User from "../models/user.model.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendMail, emailVerificationTemplate } from "../utils/mail.js";
+import { tokenGenerator } from "../utils/tokenGenerator.js";
 
 export const registerUser = asyncHandler(async (req, res) => {
   const { email, userName, password, role } = req.body;
@@ -40,4 +41,35 @@ export const registerUser = asyncHandler(async (req, res) => {
   return res
     .status(201)
     .json(new apiResponse(201, createdUser, "User registered successfully"));
+});
+
+export const loginUser = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await User.findOne({ email: email });
+
+  if (!user) throw new apiError(401, "Invalid email or password");
+
+  const isPasswordValid = await user.verifyPassword(password);
+  if (!isPasswordValid) throw new apiError(401, "Invalid email or password");
+
+  const { accessToken, refreshToken } = await tokenGenerator(user._id);
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    })
+    .cookie("refreshToken", refreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+    .json(new apiResponse(200, null, "Login successful"));
 });

@@ -1,11 +1,15 @@
-import jwt from "jsonwebtoken";
-import "dotenv/config";
-import { userTokenSchema } from "../validation/userToken.validation.js";
-export const generateToken = (payload) => {
-  const validatedPayload = userTokenSchema.safeParse(payload);
-  if (!validatedPayload.success) {
-    throw new Error("Invalid payload for token generation");
+import User from "../models/user.model.js";
+import apiError from "./apiError.js";
+export const tokenGenerator = async (userId) => {
+  try {
+    const user = await User.findById(userId);
+    const accessToken = user.generateAccessToken();
+    const refreshToken = user.generateRefreshToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+    return { accessToken, refreshToken };
+  } catch (error) {
+    throw new apiError(500, "something went wrong while generating tokens");
   }
-  const token = jwt.sign(validatedPayload.data, process.env.JWT_SECRET);
-  return token;
 };
