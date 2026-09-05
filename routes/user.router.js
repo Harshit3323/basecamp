@@ -1,4 +1,9 @@
-import { loginUser, registerUser } from "../controllers/auth.controller.js";
+import {
+  loginUser,
+  registerUser,
+  logoutUser,
+} from "../controllers/auth.controller.js";
+import { authMiddleware } from "../middleware/auth.middleware.js";
 import { Router } from "express";
 import {
   validateReqBody,
@@ -10,5 +15,7 @@ const userRouter = Router();
 userRouter.post("/register", validateReqBody, validateRequest, registerUser);
 
 userRouter.post("/login", loginVlidator, validateRequest, loginUser);
+
+userRouter.post("/logout", authMiddleware, logoutUser);
 
 export default userRouter;

@@ -77,6 +77,7 @@ userSchema.methods.generateAccessToken = function () {
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRE_TIME },
   );
 };
+
 userSchema.methods.generateRefreshToken = function () {
   return jwt.sign(
     {
@@ -86,6 +87,7 @@ userSchema.methods.generateRefreshToken = function () {
     { expiresIn: process.env.REFRESH_TOKEN_EXPIRE_TIME },
   );
 };
+
 userSchema.methods.generateTemporaryToken = function () {
   const unhashedToken = randomBytes(32).toString("hex");
   const hashedToken = createHmac("sha256", process.env.JWT_SECRET)
