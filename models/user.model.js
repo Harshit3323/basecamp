@@ -93,7 +93,7 @@ userSchema.methods.generateTemporaryToken = function () {
   const hashedToken = createHmac("sha256", process.env.JWT_SECRET)
     .update(unhashedToken)
     .digest("hex");
-  const tokenExpiry = Date.now() + 20 * 60 * 1000; //20 minutes from now
+  const tokenExpiry = Date.now() + 7 * 24 * 60 * 60 * 1000; //20 minutes from now
   return { unhashedToken, hashedToken, tokenExpiry };
 };
 
