@@ -5,7 +5,7 @@ import { asyncHandler } from "../utils/asyncHandler.js";
 import { sendMail, emailVerificationTemplate } from "../utils/mail.js";
 import { tokenGenerator } from "../utils/tokenGenerator.js";
 import { createHmac } from "crypto";
-
+import jwt from "jsonwebtoken";
 export const registerUser = asyncHandler(async (req, res) => {
   const { email, userName, password, role } = req.body;
   const existingUser = await User.findOne({ $or: [{ userName }, { email }] });
@@ -153,4 +153,60 @@ export const resendVerificationMail = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new apiResponse(200, null, "Verification email sent successfully"));
+});
+
+export const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken =
+    req.body.refreshToken || req.cookies.refreshToken;
+  if (!incomingRefreshToken) throw new apiError(401, "Unauthorized request");
+
+  // Only jwt.verify needs the try/catch — it's the only thing that
+  // throws for a genuinely "bad token" reason (malformed/expired signature)
+  let decodedToken;
+  try {
+    decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+    );
+  } catch (err) {
+    throw new apiError(401, "Invalid or expired refresh token");
+  }
+
+  const currentUser = await User.findById(decodedToken._id);
+  if (!currentUser) throw new apiError(401, "Invalid token");
+
+  if (incomingRefreshToken !== currentUser.refreshToken) {
+    // Mismatch = either a stale token (old tab, harmless) or a stolen
+    // token being reused (malicious). Since you're on single-session
+    // storage right now, treat it as reuse and force re-login —
+    // safer default until you move to per-session tokens.
+    currentUser.refreshToken = undefined;
+    await currentUser.save({ validateBeforeSave: false });
+    throw new apiError(
+      401,
+      "Refresh token expired or already used, please login again",
+    );
+  }
+
+  const { accessToken, refreshToken: newRefreshToken } = await tokenGenerator(
+    currentUser._id,
+  );
+
+  const cookieOptions = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+  };
+
+  return res
+    .status(200)
+    .cookie("accessToken", accessToken, {
+      ...cookieOptions,
+      maxAge: 15 * 60 * 1000,
+    })
+    .cookie("refreshToken", newRefreshToken, {
+      ...cookieOptions,
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+    .json(new apiResponse(200, { accessToken }, "Access token refreshed"));
 });

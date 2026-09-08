@@ -5,6 +5,7 @@ import {
   currentUser,
   verifyEmail,
   resendVerificationMail,
+  refreshAccessToken,
 } from "../controllers/auth.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { Router } from "express";
@@ -26,4 +27,7 @@ userRouter.get("/getCurrentUser", authMiddleware, currentUser);
 userRouter.get("/verify-email/:verificationToken", verifyEmail);
 
 userRouter.post("/resend-email-verification", resendVerificationMail);
+
+userRouter.post("/refresh-token", refreshAccessToken);
+
 export default userRouter;
