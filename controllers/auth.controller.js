@@ -10,6 +10,7 @@ import {
 import { tokenGenerator } from "../utils/tokenGenerator.js";
 import { createHmac } from "crypto";
 import jwt from "jsonwebtoken";
+import { validateHeaderName } from "http";
 
 export const registerUser = asyncHandler(async (req, res) => {
   const { email, userName, password, role } = req.body;
@@ -272,4 +273,24 @@ export const resetPassword = asyncHandler(async (req, res) => {
   return res
     .status(200)
     .json(new apiResponse(200, {}, "Password has been reset successfully"));
+});
+
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword } = req.body;
+  const user = req.user;
+
+  const isCurrentPasswordValid = await user.verifyPassword(currentPassword);
+
+  if (!isCurrentPasswordValid) {
+    throw new apiError(401, "Current password is incorrect");
+  }
+
+  user.password = newPassword;
+  user.refreshToken = undefined;
+
+  await user.save();
+
+  return res
+    .status(200)
+    .json(new apiResponse(200, null, "Password changed successfully"));
 });

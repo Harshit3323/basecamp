@@ -8,6 +8,7 @@ import {
   refreshAccessToken,
   forgotPasswordRequest,
   resetPassword,
+  changePassword,
 } from "../controllers/auth.controller.js";
 import { authMiddleware } from "../middleware/auth.middleware.js";
 import { Router } from "express";
@@ -35,4 +36,5 @@ userRouter.post("/refresh-token", refreshAccessToken);
 userRouter.post("/forgot-password", forgotPasswordRequest);
 userRouter.post("/reset-password/:resetToken", resetPassword);
 
+userRouter.post("/change-password", authMiddleware, changePassword);
 export default userRouter;
