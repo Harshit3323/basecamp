@@ -5,6 +5,7 @@ import healthRouter from "./routes/healthCheck.router.js";
 import userRouter from "./routes/user.router.js";
 import { errorHandler } from "./middleware/error.middleware.js";
 import cookieParser from "cookie-parser";
+import projectRouter from "./routes/project.router.js";
 
 const app = express();
 
@@ -26,6 +27,9 @@ app.use(
 app.use("/api/v1/healthcheck/", healthRouter);
 
 app.use("/api/v1/auth/", userRouter);
+
+app.use("/api/v1/projects/", projectRouter);
+
 app.use(errorHandler);
 
 app.get("/", async (req, res) => {

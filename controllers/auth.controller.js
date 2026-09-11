@@ -10,10 +10,9 @@ import {
 import { tokenGenerator } from "../utils/tokenGenerator.js";
 import { createHmac } from "crypto";
 import jwt from "jsonwebtoken";
-import { validateHeaderName } from "http";
 
 export const registerUser = asyncHandler(async (req, res) => {
-  const { email, userName, password, role } = req.body;
+  const { email, userName, password } = req.body;
   const existingUser = await User.findOne({ $or: [{ userName }, { email }] });
   if (existingUser)
     throw new apiError(409, `user with the same email/username already exists`);

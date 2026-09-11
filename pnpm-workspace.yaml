@@ -1,2 +1,5 @@
 allowBuilds:
+  "@parcel/watcher": false
   bcrypt: false
+  mongodb-memory-server: false
+  unrs-resolver: false
